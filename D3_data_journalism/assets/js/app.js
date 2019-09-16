@@ -34,7 +34,6 @@ let chartGroup = svg.append('g')
 /**********************************************************************/
 var chosenXAxis = "poverty";
 var chosenYAxis = "healthcare";
-var chosenAxis = "poverty";
 
 
 /**********************************************************************/
@@ -122,42 +121,47 @@ function renderYtexts(textGroup, newYScale, chosenYAxis) {
 }
 
 
-
-
-
 // Function: To update circles group with new tooltip:
-function updateToolTip(chosenAxis, circlesGroup) {
+function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
+    let xlabel = 'Poverty:';
+    let ylabel = 'Healthcare:';
+    let xPostfix = '%';
+    let yPostfix = '%';
 
-    switch(chosenAxis) {
-        case 'poverty'      : var label = 'Poverty:'; break;
-        case 'age'          : var label = 'Age:'; break;
-        case 'income'       : var label = 'Income:'; break;
-        case 'obesity'      : var label = 'Obesity:'; break;
-        case 'smokes'       : var label = 'Smokes:'; break;
-        case 'healthcare': var label = 'Healthcare:'; break;
-        default             : var label = 'Poverty:'; break;
+    switch(chosenXAxis) {
+        case 'poverty'      : xlabel = 'Poverty:'; break;
+        case 'age'          : xlabel = 'Age:'; break;
+        case 'income'       : xlabel = 'Income:'; break;
+    }
+
+    switch(chosenYAxis) {
+        case 'obesity'      : ylabel = 'Obesity:'; break;
+        case 'smokes'       : ylabel = 'Smokes:'; break;
+        case 'healthcare'   : ylabel = 'Healthcare:'; break;
+    }
+
+    switch(chosenXAxis) {
+        case 'poverty'      : xPostfix = '%'; break;
+        case 'age'          : xPostfix = ''; break;
+        case 'income'       : xPostfix = ''; break;
     }
     
-    //#RF NOT WORKING:
     // initialize toolTip:
     let toolTip = d3.tip()
                     .attr('class', 'd3-tip')
-                    // .direction('n')
-                    .offset([80, -60])
-                    .html(function(d) {
-                        return (`<strong>${d.state}</strong><br>${label} ${d[chosenAxis]}`);
+                    .direction('w')
+                    .html(function(d) {                  
+                        return (`<strong>${d.state}</strong><br>
+                                 ${xlabel} ${d[chosenXAxis]}${xPostfix}<br>
+                                 ${ylabel} ${d[chosenYAxis]}${yPostfix}`);
                     });
 
     // create the tooltip in chartGroup:
     circlesGroup.call(toolTip);
 
     // create mouseover and mouseout event listeners to display tooltip:
-    circlesGroup.on('mouseover', function(data) {
-                    toolTip.show(data);
-                    })
-                .on('mouseout', function(data, index) {
-                    toolTip.hide(data);
-                });
+    circlesGroup.on('mouseover', toolTip.show)
+                .on('mouseout', toolTip.hide);
 
     return circlesGroup;
 }
@@ -227,9 +231,6 @@ d3.csv('/assets/data/data.csv').then(function(acsTable, error) {
                               .attr('font-weight', 'bold')
                               .attr('fill', 'white')
                               .text(function(d) {return d.abbr});
-
-    
-    
     
     // add x axis label group:
     let xLabelGrp = chartGroup.append('g')
@@ -290,9 +291,8 @@ d3.csv('/assets/data/data.csv').then(function(acsTable, error) {
                                .text('Obese (%)');
     
 
-    //#RF: needs fixing: need to re-assign chosenAxis
-    // Run the updateToolTip functon:
-    circlesGroup = updateToolTip(chosenAxis, circlesGroup);
+    // Initialize the tooltips:
+    circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
 
     /******************************************************/
@@ -318,6 +318,9 @@ d3.csv('/assets/data/data.csv').then(function(acsTable, error) {
 
                     //upate text group:
                     textGroup = renderXtexts(textGroup, xLinearScale, chosenXAxis);
+
+                    //update tooltip:
+                    updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
                     //change the active x Axis label:
                     switch(chosenXAxis) {
@@ -382,6 +385,9 @@ d3.csv('/assets/data/data.csv').then(function(acsTable, error) {
 
                     //upate text group:
                     textGroup = renderYtexts(textGroup, yLinearScale, chosenYAxis);
+
+                    //update tooltip:
+                    updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
                     //change the active y Axis label:
                     switch(chosenYAxis) {
